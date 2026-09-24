@@ -33,6 +33,40 @@ def main():
             created_by text NOT NULL
         )"""
     )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS seats (
+            id serial PRIMARY KEY,
+            name text NOT NULL UNIQUE,
+            created_by text NOT NULL,
+            created_at timestamptz NOT NULL DEFAULT now()
+        )"""
+    )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS seat_occupancy (
+            seat_id integer PRIMARY KEY REFERENCES seats (id),
+            occupant text NOT NULL,
+            occupied_at timestamptz NOT NULL DEFAULT now()
+        )"""
+    )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS seat_events (
+            id serial PRIMARY KEY,
+            seat_id integer NOT NULL REFERENCES seats (id),
+            actor text NOT NULL,
+            action text NOT NULL,
+            created_at timestamptz NOT NULL DEFAULT now()
+        )"""
+    )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS settings (
+            key text PRIMARY KEY,
+            value text NOT NULL
+        )"""
+    )
+    cur.execute(
+        """INSERT INTO settings (key, value) VALUES ('seat_timeout_minutes', '30')
+           ON CONFLICT (key) DO NOTHING"""
+    )
     cur.execute("SELECT COUNT(*) FROM cuppings")
     if cur.fetchone()[0] == 0:
         for lot, aroma, taste, liquor in (("春茶-A", 8, 8, 7), ("夏茶-C", 5, 4, 6)):

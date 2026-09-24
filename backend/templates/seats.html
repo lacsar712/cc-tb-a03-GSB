@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>席位一览 · 当前占用</h2>
+{% if error %}<p class="fail">{{ error }}</p>{% endif %}
+{% if can_write %}
+<form method="post" action="{{ url_for('register_seat') }}">
+  <input name="name" placeholder="新席位名（唯一）" required />
+  <button>登记席位</button>
+</form>
+<form method="post" action="{{ url_for('set_seat_timeout') }}">
+  占用超时（分钟，0 表示立即超时）
+  <input name="minutes" type="number" min="0" step="1" value="{{ timeout }}" required />
+  <button>保存超时</button>
+</form>
+{% else %}
+<p>占用超时：{{ timeout }} 分钟（观察员只读，不能登席、占席、清席）</p>
+{% endif %}
+<table>
+  <thead>
+    <tr><th>席位</th><th>状态</th><th>占用者</th><th>占用时刻</th>{% if can_write %}<th>操作</th>{% endif %}</tr>
+  </thead>
+  <tbody>
+    {% for s in seats %}
+    <tr>
+      <td>{{ s.name }}</td>
+      <td>
+        {% if s.occupant %}
+          {% if s.expired %}已超时{% else %}占用中{% endif %}
+        {% else %}
+          空闲
+        {% endif %}
+      </td>
+      <td>{{ s.occupant or "—" }}</td>
+      <td>{{ s.occupied_at.strftime('%Y-%m-%d %H:%M:%S') if s.occupied_at else "—" }}</td>
+      {% if can_write %}
+      <td>
+        {% if (not s.occupant) or s.expired %}
+        <form method="post" action="{{ url_for('occupy_seat', seat_id=s.id) }}" style="display:inline">
+          <button>占席</button>
+        </form>
+        {% endif %}
+        {% if s.occupant and s.occupant == session.user %}
+        <form method="post" action="{{ url_for('leave_seat', seat_id=s.id) }}" style="display:inline">
+          <button>离席</button>
+        </form>
+        {% endif %}
+        {% if s.occupant and s.expired %}
+        <form method="post" action="{{ url_for('clear_seat', seat_id=s.id) }}" style="display:inline">
+          <button>强制清席</button>
+        </form>
+        {% endif %}
+      </td>
+      {% endif %}
+    </tr>
+    {% else %}
+    <tr><td colspan="{{ 5 if can_write else 4 }}">席位册为空，请先登记席位。</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>占席履历</h2>
+<table>
+  <thead>
+    <tr><th>时刻</th><th>席位</th><th>操作者</th><th>动作</th></tr>
+  </thead>
+  <tbody>
+    {% for e in events %}
+    <tr>
+      <td>{{ e.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+      <td>{{ e.seat_name }}</td>
+      <td>{{ e.actor }}</td>
+      <td>{{ e.action }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">暂无占席履历。</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -8,6 +8,7 @@
   <input name="taste" type="number" step="0.1" min="0" max="10" placeholder="滋味" required />
   <input name="liquor" type="number" step="0.1" min="0" max="10" placeholder="汤色" required />
   <button>提交</button>
+  <p>交评前请先到<a href="{{ url_for('seats') }}">席位页</a>占用一个审评席，未占席的交评会被拒绝。</p>
 </form>
 {% endif %}
 <table>
