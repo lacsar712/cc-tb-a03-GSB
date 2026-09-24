@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block body %}
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<section>
+  <h2>当前占用</h2>
+  {% if can_write %}
+  <form method="post" action="{{ url_for('seat_register') }}">
+    <input name="name" placeholder="新席位名" required />
+    <button>登记席位</button>
+  </form>
+  <form method="post" action="{{ url_for('seat_timeout') }}">
+    占席超时
+    <input name="minutes" type="number" min="0" step="1" value="{{ timeout }}" required />
+    分钟
+    <button>修改超时</button>
+  </form>
+  {% else %}
+  <p>占席超时：{{ timeout }} 分钟</p>
+  {% endif %}
+  <table>
+    <thead>
+      <tr><th>席位</th><th>占用者</th><th>占用时刻</th><th>状态</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+      {% for seat in seats %}
+      <tr>
+        <td>{{ seat.name }}</td>
+        <td>{{ seat.occupant or "—" }}</td>
+        <td>{% if seat.occupied_at %}{{ seat.occupied_at.strftime("%Y-%m-%d %H:%M:%S") }} UTC{% else %}—{% endif %}</td>
+        <td>
+          {% if not seat.occupant %}空闲
+          {% elif seat.timed_out %}已超时
+          {% else %}占用中{% endif %}
+        </td>
+        <td>
+          {% if can_write %}
+            {% if not seat.occupant %}
+              <form method="post" action="{{ url_for('seat_occupy', seat_id=seat.id) }}">
+                <button>占席</button>
+              </form>
+            {% elif seat.occupant == session.user %}
+              <form method="post" action="{{ url_for('seat_leave', seat_id=seat.id) }}">
+                <button>离席</button>
+              </form>
+            {% elif seat.timed_out %}
+              <form method="post" action="{{ url_for('seat_clear', seat_id=seat.id) }}">
+                <button>强制清席</button>
+              </form>
+            {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>占席履历</h2>
+  <table>
+    <thead>
+      <tr><th>时刻</th><th>席位</th><th>操作者</th><th>动作</th></tr>
+    </thead>
+    <tbody>
+      {% for event in history %}
+      <tr>
+        <td>{{ event.happened_at.strftime("%Y-%m-%d %H:%M:%S") }} UTC</td>
+        <td>{{ event.seat_name }}</td>
+        <td>{{ event.actor }}</td>
+        <td>{{ event.action }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

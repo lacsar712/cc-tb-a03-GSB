@@ -11,6 +11,8 @@
     table { width: 100%; background: #fffaf3; border-collapse: collapse; }
     td, th { padding: 8px; border-bottom: 1px solid #e6d3c0; text-align: left; }
     form { background: #fffaf3; padding: 12px; margin-bottom: 16px; }
+    td form { display: inline; background: none; padding: 0; margin: 0; }
+    .flashes { background: #fdeeda; border: 1px solid #e6d3c0; padding: 8px 8px 8px 28px; }
     .pass { color: #166534; } .fail { color: #9f1239; }
   </style>
 </head>
@@ -19,6 +21,8 @@
     <strong>茶叶拼配审评台</strong>
     {% if session.user %}
       <span>{{ session.user }}</span>
+      <a href="{{ url_for('home') }}">审评总表</a>
+      <a href="{{ url_for('seats') }}">席位册</a>
       <a href="{{ url_for('logout') }}">退出</a>
     {% endif %}
   </header>
